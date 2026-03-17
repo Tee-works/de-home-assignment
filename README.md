@@ -300,7 +300,19 @@ These operational patterns align with the production mapping in `docs/dataflow_d
 5. Adopt dbt in BigQuery to build/test/document Silver/Gold models and enforce transformation contracts.
 6. If API moves to live datastore reads, adopt async I/O + pooling to scale concurrent requests.
 
-## 6. Project layout
+## 6. Use of LLMs
+
+An LLM was used as a productivity aid for:
+
+- Code structure brainstorming
+- Implementation guidance and code review for edge cases
+- Documentation review and iteration
+
+All architectural decisions, data quality rules, aggregation design, storage schema, and production strategy were my own.
+
+---
+
+## 7. Project layout
 
 ```text
 src/de_home_assignment/pipeline.py   # Validation, normalization, aggregation, output writers
