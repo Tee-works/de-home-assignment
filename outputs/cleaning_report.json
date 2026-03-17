@@ -1,0 +1,17 @@
+{
+  "raw_events": 2020,
+  "cleaned_events": 1945,
+  "dropped_events": 75,
+  "dropped_by_reason": {
+    "duplicate_event_id": 20,
+    "invalid_status_code": 10,
+    "invalid_timestamp": 6,
+    "missing_service": 6,
+    "missing_status_code": 9,
+    "missing_timestamp": 24
+  },
+  "normalized_timestamps": 6,
+  "normalized_status_codes": 2,
+  "normalized_latency": 0,
+  "duplicates_dropped": 20
+}
