@@ -7,7 +7,7 @@ This repository contains an end-to-end Python solution for the assignment in `Ho
   - `outputs/cleaned_events.jsonl`
   - `outputs/metrics_per_service_per_minute.csv`
   - `outputs/cleaning_report.json`
-- API: FastAPI app exposing processed metrics
+- API: FastAPI app exposing processed metrics with typed response contracts
 - Tests: pytest unit/integration coverage for pipeline + API
 
 ## 1. How to run
@@ -169,13 +169,19 @@ Implemented with FastAPI:
 1. `GET /health`
    - Basic liveness endpoint
 
-2. `GET /metrics?service=...&from=...&to=...`
-   - Returns processed per-minute metrics
+2. `GET /metrics`
+   - Returns processed per-minute metrics with filtering, sorting, and pagination.
    - Query params:
-     - `service` optional exact match
-     - `from` optional ISO-8601
-     - `to` optional ISO-8601
-   - Validates timestamp input and returns HTTP 400 for invalid values
+     - `service` optional; supports repeated values and comma-separated values.
+     - `from`, `to` optional ISO-8601 time range (timezone required).
+     - `min_error_rate`, `max_error_rate` optional range filters in `[0, 1]`.
+     - `min_request_count`, `max_request_count` optional integer range filters.
+     - `sort_by` optional: `minute`, `service`, `request_count`, `error_rate`,
+       `average_latency_ms`, `p50_latency_ms`, `p95_latency_ms`, `p99_latency_ms`.
+     - `order` optional: `asc` or `desc`.
+     - `limit`/`offset` pagination.
+   - Response includes pagination metadata: `total`, `returned`, `has_more`, `next_offset`.
+   - Response contract is declared with Pydantic `response_model` and exposed in OpenAPI.
 
 3. `GET /summary`
    - Returns cleaning statistics and metrics row count
@@ -183,13 +189,19 @@ Implemented with FastAPI:
 ### API examples
 
 ```bash
-curl "http://localhost:8000/metrics?service=checkout&from=2025-01-12T10:00:00Z&to=2025-01-12T10:10:00Z"
+curl "http://localhost:8000/metrics?service=checkout&service=payments&from=2025-01-12T10:00:00Z&to=2025-01-12T10:10:00Z&sort_by=error_rate&order=desc&limit=50&offset=0"
 ```
 
 Example response shape:
 
 ```json
 {
+  "total": 2,
+  "limit": 50,
+  "offset": 0,
+  "returned": 2,
+  "has_more": false,
+  "next_offset": null,
   "metrics": [
     {
       "service": "checkout",
@@ -243,6 +255,8 @@ Example response shape:
    - Runs ruff lint checks
    - Runs mypy type checks
    - Runs quality gate script
+   - API tests cover pagination metadata, range filters, sorting fields (including nullable latency
+     sort behavior), timezone validation, and OpenAPI response-schema presence
 3. Structured logging in runners/modules:
    - Pipeline run logs input/output counts and drop reason summaries
    - API startup and query logs include filter parameters and returned row counts
@@ -331,4 +345,3 @@ docs/bigquery_schema.sql             # BigQuery table definitions
 .github/workflows/ci.yml             # CI: pipeline + tests + ruff + mypy + quality gate
 outputs/*                            # Generated artifacts from assignment dataset
 ```
-
